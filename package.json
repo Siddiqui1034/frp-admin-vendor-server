@@ -1,0 +1,19 @@
+{
+  "name": "finalproject-admin-vendor-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon ./app"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/server": "^4.10.4",
+    "graphql": "^16.8.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.6.2"
+  },
+  "type": "module"
+}
