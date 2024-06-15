@@ -58,6 +58,17 @@ export const resolvers = {
                 console.error(exception.message);
                 return exception.message;
             }
+        },
+        getProducts: async () =>{
+            try{
+                const database = await DB_Connection()
+                const collection = database.collection("products")
+                const result = await collection.find({}).toArray()
+                return result;
+            }catch(exception){
+                console.error(exception.message);
+                return exception.message;
+            }
         }
     },
     Mutation:{
@@ -95,6 +106,55 @@ export const resolvers = {
             }catch(exception){
                 console.error(exception)
                 return exception.message;
+            }
+        },
+
+        saveProduct: async (parent,args,context,info) =>{
+            try{
+                const databaseObject = await DB_Connection();
+                const collection = databaseObject.collection("products")
+                const result = await collection.insertOne(args.data)
+                return result;
+            }catch(ex){
+                console.error(ex);
+                return ex.message;
+            }
+        },
+        updateProduct: async (parent, args, context, info) =>{
+            try{
+                const {data, id} = args; // data and id are inputs to updateProduct Mutation and we r destructing this here
+                const database = await DB_Connection()
+                const collectionobject = database.collection("products")
+                const result = collectionobject.updateOne({_id: ObjectId.createFromHexString(id)}, {$set: data})
+                return result;
+            }catch(exception){
+                console.error(exception)
+                return exception.message;
+            }
+        }, 
+        deleteProduct: async (parent, args, context, info) =>{
+            try{
+                const database = await DB_Connection()
+                const collection = database.collection("products")
+                const result = collection.deleteOne({_id: ObjectId.createFromHexString(args.id)})
+                return result;
+            }catch(exception){
+                console.error(exception.message);
+                return exception.message;
+            }
+
+        },
+
+        changePassword: async (parent, args, context, info) =>{
+            try{
+                const { password, id } = args; 
+                const database = await DB_Connection()
+                const collection = database.collection("vendors")
+                const result =collection.updateOne({_id: ObjectId.createFromHexString(id)}, {$set: {password: password}})
+                return result;
+            }catch(exception){
+                console.error(exception.message);
+                return exception.message
             }
         }
 
