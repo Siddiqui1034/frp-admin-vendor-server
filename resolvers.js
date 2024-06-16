@@ -12,18 +12,21 @@ export const resolvers = {
                 // const role=args?.data?.role === 'A' ?'admin':'vendor'
                 // console.log(role);
                 // const collectionObject = database.collection("admin")
-                const collection = database.collection(args?.data?.role)
+                const collectionObject = database.collection(args?.data?.role)
+                // const collectionObject = database.collection("vendors")
                 console.log(1, args.data)
                 // const users = await collectionObject.find(args?.data).toArray()// returning a promise so we have to write await keyword
+                
                 const user = await collectionObject.findOne(args?.data)// returning a promise so we have to write await keyword
+                console.log(123, user);
                 if(user){
                     const token = jwt.sign(args?.data, "appToken") // server side created token with name appToken by sign method given by jsonwebtoken
                     user.token = token; // adding one property in user i.e. token
                 }
                 return user
-                // console.log(1, users);
-                // console.log(users) // with find(args?.data).toArray() [ { _id: new ObjectId('664dd460e05fd96839f62963'), password: 'admin', uid: 'admin', role: 'admin' }]
-                // console.log(users) // with findOne(args? data) { _id: new ObjectId('664dd460e05fd96839f62963'), password: 'admin', uid: 'admin', role: 'admin' }
+              
+                // console.log(user) // with find(args?.data).toArray() [ { _id: new ObjectId('664dd460e05fd96839f62963'), password: 'admin', uid: 'admin', role: 'admin' }]
+                // console.log(user) // with findOne(args? data) { _id: new ObjectId('664dd460e05fd96839f62963'), password: 'admin', uid: 'admin', role: 'admin' }
 
                 
                 // if(users){
@@ -77,8 +80,12 @@ export const resolvers = {
             // insert data in the Databse so first we need database connection
             const database = await DB_Connection()
             const vendorCollection = database.collection("vendors");
-            const vendersDetails = await vendorCollection.insertOne(args?.data)
-            console.log(vendersDetails);
+            let data = args.data
+            if(!data.role){
+                data = {...data, role: "vendor" }
+            }
+            const vendersDetails = await vendorCollection.insertOne(data)
+            // console.log(vendersDetails);
             return vendersDetails;
         }   
         catch(exception){
@@ -86,7 +93,7 @@ export const resolvers = {
             return exception.message;
         }    
         },
-        updateVendor: async (parent, args, context, info) =>{
+        updateVendor: async (parent, args, context, info) =>{ 
             try{
                 const db = await  DB_Connection();
                 const collection = db.collection("vendors")
