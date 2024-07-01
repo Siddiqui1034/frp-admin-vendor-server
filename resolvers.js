@@ -1,8 +1,18 @@
 import DB_Connection from "./utils/DBConnection.js"
 import jwt from 'jsonwebtoken'
 import { ObjectId } from "mongodb"
+// import path from 'path'
+import fs from 'fs'
+import {GraphQLUpload} from 'graphql-upload'
+import{finished} from 'stream/promises'
+import { fileURLToPath } from "url"
+import path, {dirname} from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export const resolvers = {
+      Upload: GraphQLUpload,
     Query:{
         login: async (parent, args, context, info )=>{
             try{
@@ -14,11 +24,12 @@ export const resolvers = {
                 // const collectionObject = database.collection("admin")
                 const collectionObject = database.collection(args?.data?.role)
                 // const collectionObject = database.collection("vendors")
-                console.log(1, args.data)
+                // console.log(1, args.data.role)
+                // console.log(collectionObject);
                 // const users = await collectionObject.find(args?.data).toArray()// returning a promise so we have to write await keyword
                 
-                const user = await collectionObject.findOne(args?.data)// returning a promise so we have to write await keyword
-                console.log(123, user);
+                const user = await collectionObject.findOne({uid:args.data.uid, password:args.data.password})// returning a promise so we have to write await keyword
+                // console.log(123, user);
                 if(user){
                     const token = jwt.sign(args?.data, "appToken") // server side created token with name appToken by sign method given by jsonwebtoken
                     user.token = token; // adding one property in user i.e. token
@@ -53,7 +64,7 @@ export const resolvers = {
         getVendors: async (parent, args, context, info)=>{
             try{
                 const database = await DB_Connection()
-                const vendorCollection = database.collection("vendors");
+                const vendorCollection = database.collection("vendor");
                 const vendersDetails = await vendorCollection.find().toArray()
                 return vendersDetails;
             }
@@ -62,11 +73,12 @@ export const resolvers = {
                 return exception.message;
             }
         },
-        getProducts: async () =>{
+        getProducts: async (parent, args, context, info) =>{
             try{
+                console.log(args)
                 const database = await DB_Connection()
                 const collection = database.collection("products")
-                const result = await collection.find({}).toArray()
+                const result = await collection.find({uid:args.id}).toArray()
                 return result;
             }catch(exception){
                 console.error(exception.message);
@@ -75,7 +87,7 @@ export const resolvers = {
         }
     },
     Mutation:{
-        registerVendors: async (parent, args, context, info)=>{ 
+        registerVendor: async (parent, args, context, info)=>{ 
         try{
             // insert data in the Databse so first we need database connection
             const database = await DB_Connection()
@@ -97,14 +109,14 @@ export const resolvers = {
             try{
                 const db = await  DB_Connection();
                 const collection = db.collection("vendors")
-                const result = await collection.updateOne({_id: ObjectId.createFromHexString(args.id) },{$set:args.data})
+                const result = await collection.updateOne( {_id: ObjectId.createFromHexString(args.id)}, {$set: args.data} )
                 return result;                
             }catch(exception){
                 console.error(exception)
                 return exception.message;
             }
         },
-        deleteVendor: async (parent, args, context, info) =>{
+        deleteVendor: async (parent,args, context, info) =>{
             try{
                 const db = await DB_Connection();
                 const collection = db.collection("vendors")
@@ -116,16 +128,34 @@ export const resolvers = {
             }
         },
 
-        saveProduct: async (parent,args,context,info) =>{
-            try{
-                const databaseObject = await DB_Connection();
-                const collection = databaseObject.collection("products")
-                const result = await collection.insertOne(args.data)
-                return result;
-            }catch(ex){
-                console.error(ex);
-                return ex.message;
-            }
+        saveProduct: async (parent, { file, product }, context, info) =>{
+           
+            const {createReadStream, filename, mimetype, encoding } = await file;
+
+            const productName = `${product?.name}.${filename?.split('.')?.pop()}`
+          
+            const stream = createReadStream();
+            const outPath = path.join(__dirname, `/uploads/${product?.uid}_${productName}`);
+            const out = fs.createWriteStream(outPath);
+            stream.pipe(out);
+            await finished(out);
+            
+            const database = await DB_Connection()
+            const collection = database.collection("products");        
+            const result = await collection.insertOne({ ...product, path:`/uploads/${product?.uid}_${productName}`})
+            // console.log(result)
+            return result;
+            // return {};
+
+            // try{
+            //     const databaseObject = await DB_Connection();
+            //     const collection = databaseObject.collection("products")
+            //     const result = await collection.insertOne(args.data)
+            //     return result;
+            // }catch(ex){
+            //     console.error(ex);
+            //     return ex.message;
+            // }
         },
         updateProduct: async (parent, args, context, info) =>{
             try{
@@ -138,7 +168,8 @@ export const resolvers = {
                 console.error(exception)
                 return exception.message;
             }
-        }, 
+        },
+         
         deleteProduct: async (parent, args, context, info) =>{
             try{
                 const database = await DB_Connection()
