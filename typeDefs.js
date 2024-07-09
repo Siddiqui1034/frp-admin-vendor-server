@@ -2,6 +2,7 @@
 export const typeDefs = `
 
 scalar JSON
+scalar Upload
 
 input UserInput {
     uid: String
@@ -11,11 +12,17 @@ input UserInput {
     role: String
 }
 
+input loginInput{
+    uid: String
+    password: String
+    role: String
+}
+
 input ProductInput {
     uid: String
     name: String
     cost: Int
-    photo: String
+    path: String
 }
 
 type Vendor {
@@ -32,27 +39,26 @@ type Product {
     name: String
     cost: Int 
     uid: String
-    photo: String
+    path: String
     _id:String
 }
 
-
 type Query {
-    login(data: UserInput): JSON
+    login(data: loginInput): JSON
     getVendors: [Vendor]
-    getProducts: [Product]
+    getProducts(id:String): [Product]
 }
 
 type Mutation {
-    registerVendors(data: UserInput): JSON
-    updateVendor(data:UserInput, id:String): JSON
-    deleteVendor(id:String):JSON
+    registerVendor(data: UserInput): JSON
+    updateVendor(data: UserInput, id: String): JSON
+    deleteVendor(id: String):JSON
 
-    saveProduct(data:ProductInput):JSON
-    updateProduct(data: ProductInput, id:String):JSON
-    deleteProduct(id:String):JSON
+    saveProduct(file: Upload, product: ProductInput): JSON
+    updateProduct(file: Upload, data: ProductInput, updateProductId: String): JSON
+    deleteProduct(id: String, pathName: String):JSON
 
-    changePassword(password: String, id:String):JSON
+    changePassword(password: String, id: String): JSON
 }
 `
 
