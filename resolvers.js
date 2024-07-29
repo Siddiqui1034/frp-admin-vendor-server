@@ -2,12 +2,12 @@ import DB_Connection from "./utils/DBConnection.js"
 import jwt from 'jsonwebtoken'
 import { ObjectId } from "mongodb"
 
-import fs from 'fs'
 import {GraphQLUpload} from 'graphql-upload'
+import fs from 'fs'
 import{finished} from 'stream/promises'
 import { fileURLToPath } from "url"
 import path, {dirname} from 'path'
-import { timeStamp } from "console"
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -132,13 +132,11 @@ export const resolvers = {
            
             const { createReadStream, filename, mimetype, encoding } = await file;
 
-            const productName = `${product?.uid}_${new Date().getTime()}.${filename?.split('.')?.pop()}`
+            const productName = `${product?.uid}_${new Date().getTime()}.${ filename?.split('.')?.pop() }`
           
             const stream = createReadStream();
-
-            const outPath = path.join(__dirname, `/uploads/${productName}`);
+            const outPath = path.join(__dirname, `uploads/${productName}`);
             const out = fs.createWriteStream(outPath);
-
             stream.pipe(out);
             await finished(out);
             
@@ -163,8 +161,10 @@ export const resolvers = {
             try{
                 if(file){
                     const {createReadStream} = await file;
+                    debugger;
                     const productName = `${data?.path?.split('/')?.pop()}`
                     const stream = createReadStream();
+                    debugger;
                     const outPath = path.join(__dirname, `/uploads/${productName}`)
                     const out = fs.createWriteStream(outPath)
                     stream.pipe(out);
